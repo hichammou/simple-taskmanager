@@ -24,14 +24,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Print(args)
-
 	switch *operation {
 	case "add":
 		err = createTask(args[0])
 		if err != nil {
 			log.Fatal(err)
 		}
+	case "read":
+		content, err := readTasks()
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Print(content)
 	default:
 		return
 	}
@@ -67,4 +71,15 @@ func createTask(content string) error {
 	}
 
 	return nil
+}
+
+func readTasks() (string, error) {
+	content, err := os.ReadFile("tasks.txt")
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return string(content), nil
 }
