@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"flag"
 	"log"
 	"os"
-	"slices"
 )
 
 var (
@@ -52,7 +50,7 @@ func validateOperation(op *string) error {
 
 	acceptedOperations := []string{"add", "delete", "read", "update", "complete"}
 
-	if !slices.Contains(acceptedOperations, *op) {
+	if contains(acceptedOperations, *op) {
 		return ErrOperationNotValid
 	}
 
@@ -75,18 +73,11 @@ func createTask(content string) error {
 }
 
 func readTasks() (string, error) {
-	file, err := openTasks("tasks.txt")
+	content, err := os.ReadFile("tasks.txt")
 	if err != nil {
 		return "", nil
 	}
-	defer file.Close()
-
-	var content bytes.Buffer
-	_, err = content.ReadFrom(file)
-	if err != nil {
-		return "", err
-	}
-	return content.String(), nil
+	return string(content), nil
 }
 
 func openTasks(name string) (*os.File, error) {
