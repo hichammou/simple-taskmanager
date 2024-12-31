@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"log"
@@ -18,6 +19,9 @@ func main() {
 	flag.Parse()
 
 	args := flag.Args()
+	if len(args) == 0 {
+		log.Fatal(ErrOperationNotProvided)
+	}
 
 	err := validateOperation(operation)
 	if err != nil {
@@ -48,7 +52,6 @@ func validateOperation(op *string) error {
 
 	acceptedOperations := []string{"add", "delete", "read", "update", "complete"}
 
-	log.Print(*op)
 	if !slices.Contains(acceptedOperations, *op) {
 		return ErrOperationNotValid
 	}
@@ -57,14 +60,12 @@ func validateOperation(op *string) error {
 }
 
 func createTask(content string) error {
-	if _, err := os.Stat("tasks.txt"); os.IsNotExist(err) {
-		_, err := os.Create("tasks.txt")
-		if err != nil {
-			return err
-		}
+	file, err := openTasks("tasks.txt")
+	if err != nil {
+		return err
 	}
+	defer file.Close()
 
-	file, err := os.OpenFile("tasks.txt", os.O_APPEND, os.ModeAppend)
 	_, err = file.Write([]byte(content + "\n"))
 	if err != nil {
 		return err
@@ -74,12 +75,29 @@ func createTask(content string) error {
 }
 
 func readTasks() (string, error) {
-	content, err := os.ReadFile("tasks.txt")
+	file, err := openTasks("tasks.txt")
 	if err != nil {
-		if os.IsNotExist(err) {
-			return "", nil
-		}
+		return "", nil
+	}
+	defer file.Close()
+
+	var content bytes.Buffer
+	_, err = content.ReadFrom(file)
+	if err != nil {
 		return "", err
 	}
-	return string(content), nil
+	return content.String(), nil
+}
+
+func openTasks(name string) (*os.File, error) {
+	_, err := os.Stat(name)
+	if os.IsNotExist(err) {
+		file, err := os.Create(name)
+		if err != nil {
+			return nil, err
+		}
+		return file, nil
+	}
+
+	return os.OpenFile(name, os.O_RDWR|os.O_APPEND, 0)
 }
