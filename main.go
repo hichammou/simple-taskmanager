@@ -31,7 +31,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	_, err = openDB(sqliteFile)
+	db, err := openDB(sqliteFile)
 	if err != nil {
 		fmt.Printf("An error occured when connecting to the database %v", err)
 		os.Exit(1)
@@ -39,12 +39,12 @@ func main() {
 
 	switch *operation {
 	case "add":
-		err = createTask(args[0])
+		err = createTask(db, args[0])
 		if err != nil {
 			log.Fatal(err)
 		}
 	case "read":
-		content, err := readTasks()
+		content, err := readTasks(db)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -81,7 +81,7 @@ func openDB(file string) (*sql.DB, error) {
 
 	query := `
 	CREATE TABLE IF NOT EXISTS tasks (
-		id INTEGER NOT NULL PRIMARY KEY,
+		id INTEGER NOT NULL AUTOINCREMENT RIMARY KEY,
 		task TEXT NOT NULL,
 		completed INTEGER NOT NULL DEFAULT 0 CHECK (completed = 1 OR completed = 0)
 	)

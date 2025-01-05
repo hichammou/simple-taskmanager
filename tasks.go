@@ -1,28 +1,49 @@
 package main
 
-import "os"
+import (
+	"database/sql"
+	"os"
+)
 
-func createTask(content string) error {
-	file, err := openTasks("tasks.txt")
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = file.Write([]byte(content + "\n"))
-	if err != nil {
-		return err
-	}
-
-	return nil
+type Task struct {
+	ID        int
+	Task      string
+	Completed bool
 }
 
-func readTasks() (string, error) {
-	content, err := os.ReadFile("tasks.txt")
+func createTask(db *sql.DB, content string) error {
+	query := `
+		INSERT INTO tasks (task) VALUES (?)
+	`
+
+	_, err := db.Exec(query, content)
+
+	return err
+}
+
+func readTasks(db *sql.DB) ([]Task, error) {
+	query := `
+		 SELECT id, task, completed from tasks
+	`
+
+	rows, err := db.Query(query)
 	if err != nil {
-		return "", nil
+		return nil, err
 	}
-	return string(content), nil
+
+	var tasks []Task
+
+	for rows.Next() {
+		var t Task
+		rows.Scan(&t.ID, &t.Task, &t.Completed)
+		tasks = append(tasks, t)
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	return tasks, nil
 }
 
 func openTasks(name string) (*os.File, error) {
