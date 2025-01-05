@@ -1,14 +1,20 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
+	"os"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
 	ErrOperationNotValid    = errors.New("this operation is not valid. Please try again with a valid operation: add | delete | read | update | complete")
 	ErrOperationNotProvided = errors.New("please provide an operation: add | delete | read | update | complete")
+	sqliteFile              = "tasks.db"
 )
 
 func main() {
@@ -16,13 +22,19 @@ func main() {
 	flag.Parse()
 
 	args := flag.Args()
-	if len(args) == 0 {
+	if len(args) == 0 && *operation != "read" {
 		log.Fatal(ErrOperationNotProvided)
 	}
 
 	err := validateOperation(operation)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	_, err = openDB(sqliteFile)
+	if err != nil {
+		fmt.Printf("An error occured when connecting to the database %v", err)
+		os.Exit(1)
 	}
 
 	switch *operation {
@@ -49,9 +61,36 @@ func validateOperation(op *string) error {
 
 	acceptedOperations := []string{"add", "delete", "read", "update", "complete"}
 
-	if contains(acceptedOperations, *op) {
+	if !contains(acceptedOperations, *op) {
 		return ErrOperationNotValid
 	}
 
 	return nil
+}
+
+func openDB(file string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", file)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	query := `
+	CREATE TABLE IF NOT EXISTS tasks (
+		id INTEGER NOT NULL PRIMARY KEY,
+		task TEXT NOT NULL,
+		completed INTEGER NOT NULL DEFAULT 0 CHECK (completed = 1 OR completed = 0)
+	)
+	`
+
+	_, err = db.Exec(query)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
