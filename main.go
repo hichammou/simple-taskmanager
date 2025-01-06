@@ -81,7 +81,7 @@ func openDB(file string) (*sql.DB, error) {
 
 	query := `
 	CREATE TABLE IF NOT EXISTS tasks (
-		id INTEGER NOT NULL AUTOINCREMENT RIMARY KEY,
+		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		task TEXT NOT NULL,
 		completed INTEGER NOT NULL DEFAULT 0 CHECK (completed = 1 OR completed = 0)
 	)
