@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"os"
 )
 
 type Task struct {
@@ -46,15 +45,11 @@ func readTasks(db *sql.DB) ([]Task, error) {
 	return tasks, nil
 }
 
-func openTasks(name string) (*os.File, error) {
-	_, err := os.Stat(name)
-	if os.IsNotExist(err) {
-		file, err := os.Create(name)
-		if err != nil {
-			return nil, err
-		}
-		return file, nil
-	}
+func completeTask(db *sql.DB, id int) error {
+	query := `
+		UPDATE tasks SET completed = 1 WHERE id = ?
+	`
 
-	return os.OpenFile(name, os.O_RDWR|os.O_APPEND, 0)
+	_, err := db.Exec(query, id)
+	return err
 }

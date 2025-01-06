@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -49,6 +50,18 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Print(content)
+	case "complete":
+		taskId, err := strconv.Atoi(args[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = completeTask(db, taskId)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Print("Task completed")
 	default:
 		return
 	}
