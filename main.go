@@ -62,6 +62,17 @@ func main() {
 		}
 
 		log.Print("Task completed")
+	case "delete":
+		taskId, err := strconv.Atoi(args[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = deleteTask(db, taskId)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Print("task deleted")
 	default:
 		return
 	}

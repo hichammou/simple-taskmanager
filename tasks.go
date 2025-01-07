@@ -53,3 +53,13 @@ func completeTask(db *sql.DB, id int) error {
 	_, err := db.Exec(query, id)
 	return err
 }
+
+func deleteTask(db *sql.DB, id int) error {
+	query := `DELETE FROM tasks WHERE id = ?`
+	_, err := db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
